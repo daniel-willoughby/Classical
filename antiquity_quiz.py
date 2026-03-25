@@ -662,7 +662,7 @@ def render_playing():
     for i in range(shown):
         if i < len(clues):
             st.markdown(
-                f'<p style="font-size:1.05rem;color:#e8d5a3;">'
+                f'<p style="font-size:1.25rem;color:#e8d5a3;">'
                 f'<span style="color:#d4af37;font-family:\'Cinzel\',serif;'
                 f'font-size:0.78rem;letter-spacing:0.08em;">CLUE {i+1}</span>'
                 f'&nbsp;&nbsp;{clues[i]}</p>',
