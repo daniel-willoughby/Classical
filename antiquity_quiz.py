@@ -2,7 +2,18 @@ import streamlit as st
 import random
 import os
 import json
+import base64
 from datetime import datetime
+
+
+_DIR = os.path.dirname(os.path.abspath(__file__))
+
+def _img_b64(filename: str) -> str:
+    """Load a local image and return a CSS data-URI string."""
+    path = os.path.join(_DIR, "img", filename)
+    with open(path, "rb") as f:
+        data = base64.b64encode(f.read()).decode()
+    return f"data:image/jpeg;base64,{data}"
 
 QUIZ_FILE       = os.path.join(os.path.dirname(os.path.abspath(__file__)), "antiquity_quiz_102.txt")
 LEADERBOARD_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "leaderboard.json")
@@ -21,26 +32,18 @@ DIFF_INFO  = {
     "Hard":   ("Obscure specialists", "Up to 2,000 pts"),
 }
 
-# Wikipedia Commons — public domain, load fine in any browser
-_BG = {
-    "menu": (
-        "https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/"
-        "The_Parthenon_in_Athens.jpg/1280px-The_Parthenon_in_Athens.jpg"
-    ),
-    "playing": (
-        "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/"
-        "Forum_romanum_6k_%285765477480%29.jpg/"
-        "1280px-Forum_romanum_6k_%285765477480%29.jpg"
-    ),
-    "leaderboard": (
-        "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/"
-        "Theatre_of_Epidaurus.jpg/1280px-Theatre_of_Epidaurus.jpg"
-    ),
-    "result": (
-        "https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/"
-        "Colosseo_2020.jpg/1280px-Colosseo_2020.jpg"
-    ),
+# Local images (public domain, sourced from Wikimedia Commons)
+_BG_FILES = {
+    "menu":        "bg_menu.jpg",        # The Parthenon, Athens
+    "playing":     "bg_playing.jpg",     # Forum Romanum, Rome
+    "leaderboard": "bg_leaderboard.jpg", # Acropolis of Athens
+    "result":      "bg_result.jpg",      # Colosseum, Rome
 }
+
+@st.cache_data(show_spinner=False)
+def _load_bg(category: str) -> str:
+    """Cached base64 data-URI for a background image."""
+    return _img_b64(_BG_FILES.get(category, _BG_FILES["menu"]))
 
 _OVERLAY = {          # how dark to make the overlay — playing needs more contrast
     "menu":        "rgba(8,5,25,0.62)",
@@ -306,15 +309,15 @@ def inject_base_styles():
 
 
 def set_bg(category: str):
-    """Inject the per-screen background image with a dark overlay."""
-    url     = _BG.get(category, _BG["menu"])
-    overlay = _OVERLAY.get(category, "rgba(8,5,25,0.70)")
+    """Inject the per-screen background image (base64 embedded) with a dark overlay."""
+    data_uri = _load_bg(category)
+    overlay  = _OVERLAY.get(category, "rgba(8,5,25,0.70)")
     st.markdown(f"""
     <style>
     .stApp {{
         background-image:
             linear-gradient({overlay}, {overlay}),
-            url('{url}');
+            url('{data_uri}');
         background-size: cover;
         background-attachment: fixed;
         background-position: center center;
