@@ -595,7 +595,7 @@ def render_leaderboard():
 def render_select():
     """Difficulty picker for the first question of a new game."""
     set_bg("menu")
-    st.title("🏛️ Antiquity Quiz")
+    st.title("🏛️ What a Classic")
     ornament_divider()
     screen_subtitle(f"Welcome, {st.session_state.player_name} — choose your first trial")
     st.markdown("---")
