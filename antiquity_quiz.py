@@ -530,7 +530,7 @@ def leaderboard_table(entries, highlight_name=None, highlight_score=None,
 
 def render_name_entry():
     set_bg("menu")
-    st.title("🏛️ Antiquity Quiz")
+    st.title("🏛️ What a Classic")
     ornament_divider()
     screen_subtitle("Test your knowledge of the ancient world")
     st.markdown("---")
@@ -830,7 +830,7 @@ def render_final_score():
 
 def main():
     st.set_page_config(
-        page_title="Antiquity Quiz",
+        page_title="What a Classic",
         page_icon="🏛️",
         layout="centered",
         initial_sidebar_state="collapsed",
