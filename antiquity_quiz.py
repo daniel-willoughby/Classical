@@ -676,7 +676,7 @@ def render_playing():
     st.markdown("---")
 
     points_available = points_table.get(shown, points_table[max(points_table)])
-    st.caption(f"Answer now for: **{points_available} pts**")
+    st.markdown(f'<p style="font-size:1.4rem;font-weight:700;color:#d4af37;margin:0.25rem 0;">Answer now for: {points_available} pts</p>', unsafe_allow_html=True)
 
     if st.session_state.feedback:
         st.warning(st.session_state.feedback)
@@ -721,6 +721,7 @@ def render_playing():
             st.session_state.wrong_guesses = st.session_state.wrong_guesses + [clicked]
             # Only one option left after this wrong guess — auto-fail
             if len(remaining_opts) <= 2 or at_last_clue:
+                st.session_state.total_score              = max(0, st.session_state.total_score - 200)
                 st.session_state.questions_played        += 1
                 st.session_state.last_points              = 0
                 st.session_state.feedback                 = None
@@ -729,8 +730,8 @@ def render_playing():
                 st.session_state.question_result_correct  = False
             else:
                 st.session_state.clues_shown  += 1
-                st.session_state.total_score   = max(0, st.session_state.total_score - 100)
-                st.session_state.feedback      = f"❌  '{clicked}' is incorrect — next clue revealed, −100 pts."
+                st.session_state.total_score   = max(0, st.session_state.total_score - 200)
+                st.session_state.feedback      = f"❌  '{clicked}' is incorrect — next clue revealed, −200 pts (−100 wrong guess, −100 clue reveal)."
             st.rerun()
 
     if reveal:
