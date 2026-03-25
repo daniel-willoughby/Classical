@@ -82,6 +82,29 @@ Clue 4: Lost power to Vespasian.
 Clue 5: So fat he clogged the Tiber with his corpse.
 Answer: Vitellius
 
+Medium #6
+Clue 1: Left Rome a city of marble.
+Clue 2: Adopted son of Julius Caesar.
+Clue 3: Defeated Mark Antony and Cleopatra.
+Clue 4: Won the Battle of Actium.
+Clue 5: Established a new political order in Rome.
+Answer: Augustus
+
+Medium #7
+Clue 1: Lived in the 5th century BC.
+Clue 2: King of Sparta.
+Clue 3: Fought against Xerxes I.
+Clue 4: Led Greek forces at Battle of Thermopylae.
+Clue 5: Became a symbol of heroic sacrifice.
+Answer: Leonidas
+
+Medium #8
+Clue 1: Lived in 5th century BC Athens.
+Clue 2: Leader during the city’s “Golden Age.”
+Clue 3: Promoted democracy in Athens.
+Clue 4: Connected with the construction of the Parthenon.
+Clue 5: Gave the famous Funeral Oration.
+Answer: Pericles
 
 Hard
 
@@ -124,3 +147,28 @@ Clue 3: Married Claudius.
 Clue 4: Mother of Nero.
 Clue 5: Murdered by Nero.
 Answer: Agrippina the Younger
+
+Hard #6
+Clue 1: Active during the reign of Tiberius.
+Clue 2: Served as commander of the Praetorian Guard.
+Clue 3: Gained enormous influence while the emperor withdrew from Rome.
+Clue 4: Accused members of the imperial family of treason.
+Clue 5: Arrested and executed in 31 AD.
+Answer: Sejanus
+
+Hard #7
+Clue 1: Originated from a priestly family in the eastern provinces.
+Clue 2: Rose to power as a teenager during a period of instability.
+Clue 3: Promoted the worship of a foreign sun deity in Rome.
+Clue 4: Attempted to elevate that deity above traditional Roman gods.
+Clue 5: Turned the Imperial palace into a brothel.
+Answer: Elagabalus
+
+
+Hard #8
+Clue 1: Died violently.
+Clue 2: Involved in political plots.
+Clue 3: Known for scandalous reputation.
+Clue 4: Wife of Emperor Claudius.
+Clue 5: Had an alleged bet with a lady of the night.
+Answer: Messalina
