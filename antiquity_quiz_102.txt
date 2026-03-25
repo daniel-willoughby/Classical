@@ -116,3 +116,11 @@ Clue 3: Reigned during the crisis of 3rd century.
 Clue 4: Wore a Golden Mask.
 Clue 5: Known for restoring unity to Rome, Restitutor Orbis.
 Answer: Aurelian
+
+Hard #5
+Clue 1: Lived during the Julio-Claudian dynasty.
+Clue 2: Sister of Caligula.
+Clue 3: Married Claudius.
+Clue 4: Mother of Nero.
+Clue 5: Murdered by Nero.
+Answer: Agrippina the Younger

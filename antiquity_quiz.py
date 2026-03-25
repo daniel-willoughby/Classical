@@ -536,8 +536,7 @@ def leaderboard_table(entries, highlight_name=None, highlight_score=None,
     player_idx = next(
         (i for i, e in enumerate(entries)
          if e["name"] == highlight_name
-         and e["score"] == highlight_score
-         and e["difficulty"] == highlight_diff),
+         and e["score"] == highlight_score),
         None,
     ) if highlight_name else None
 
@@ -545,11 +544,11 @@ def leaderboard_table(entries, highlight_name=None, highlight_score=None,
     for i, e in enumerate(entries[:max_rows]):
         marker = " ◀ you" if i == player_idx else ""
         rows.append(
-            f"| {i+1} | {e['name']} | {e['difficulty']} | {e['score']} | {e['date']} |{marker}"
+            f"| {i+1} | {e['name']} | {e['score']} | {e['date']} |{marker}"
         )
     st.markdown(
-        "| # | Name | Difficulty | Score | Date |\n"
-        "|---|------|------------|-------|------|\n"
+        "| # | Name | Score | Date |\n"
+        "|---|------|-------|------|\n"
         + "\n".join(rows)
     )
 
