@@ -728,8 +728,9 @@ def render_playing():
                 st.session_state.screen                   = "question_result"
                 st.session_state.question_result_correct  = False
             else:
-                st.session_state.clues_shown += 2   # wrong guess skips 2 clue tiers (vs 1 for reveal)
-                st.session_state.feedback    = f"❌  '{clicked}' is incorrect — two clues forfeited."
+                st.session_state.clues_shown  += 1
+                st.session_state.total_score   = max(0, st.session_state.total_score - 100)
+                st.session_state.feedback      = f"❌  '{clicked}' is incorrect — next clue revealed, −100 pts."
             st.rerun()
 
     if reveal:
