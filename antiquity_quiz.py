@@ -536,7 +536,7 @@ def render_name_entry():
     st.markdown("---")
     st.markdown("### Who approaches the gates of knowledge?")
     with st.form("name_form"):
-        name = st.text_input("Your name:", placeholder="e.g. Marcus Aurelius")
+        name = st.text_input("Your name:", placeholder="e.g. Commodus")
         submitted = st.form_submit_button(
             "Enter the Forum →", type="primary", use_container_width=True
         )
@@ -551,7 +551,7 @@ def render_name_entry():
 
 def render_main_menu():
     set_bg("menu")
-    st.title("🏛️ Antiquity Quiz")
+    st.title("🏛️ What a Classic")
     ornament_divider()
     screen_subtitle(f"Ave, {st.session_state.player_name}!")
     st.markdown("---")
