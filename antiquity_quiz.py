@@ -428,6 +428,7 @@ def init_state():
         "leaderboard_saved":       False,
         "used_answers":            [],       # answers used this game (no intra-game repeats)
         "session_seen_answers":    [],       # answers seen this session (no cross-game repeats)
+        "current_options":         [],       # 4 shuffled answer choices for current question
         "max_difficulty_reached":  "Easy",   # highest difficulty reached this game
         "question_result_correct": False,
     }
@@ -444,6 +445,15 @@ def init_state():
         ))
 
 
+def _generate_options(correct: str, n_wrong: int = 3) -> list:
+    """Return a shuffled list of (n_wrong + 1) answer choices including the correct one."""
+    pool    = [a for a in st.session_state.all_answers if a != correct]
+    wrong   = random.sample(pool, min(n_wrong, len(pool)))
+    options = wrong + [correct]
+    random.shuffle(options)
+    return options
+
+
 def pick_question(difficulty):
     """Pick a random question, avoiding repeats within the game and across the session."""
     pool       = st.session_state.all_questions[difficulty]
@@ -453,13 +463,10 @@ def pick_question(difficulty):
     # Prefer questions unseen this session and unused this game
     available = [q for q in pool if q["answer"] not in sess_seen and q["answer"] not in game_used]
     if not available:
-        # Fallback: at least unused this game
         available = [q for q in pool if q["answer"] not in game_used]
     if not available:
-        # All used this game — just avoid session repeats
         available = [q for q in pool if q["answer"] not in sess_seen]
     if not available:
-        # Everything seen — pick from full pool (rare edge case)
         available = pool
 
     q = random.choice(available)
@@ -467,11 +474,12 @@ def pick_question(difficulty):
     # Track in session-seen (persists across games)
     st.session_state.session_seen_answers = st.session_state.session_seen_answers + [q["answer"]]
 
-    st.session_state.difficulty    = difficulty
-    st.session_state.current       = q
-    st.session_state.clues_shown   = 1
-    st.session_state.wrong_guesses = []
-    st.session_state.feedback      = None
+    st.session_state.difficulty       = difficulty
+    st.session_state.current          = q
+    st.session_state.current_options  = _generate_options(q["answer"], n_wrong=5)
+    st.session_state.clues_shown      = 1
+    st.session_state.wrong_guesses    = []
+    st.session_state.feedback         = None
 
 
 def next_difficulty(correct: bool) -> str:
@@ -673,48 +681,55 @@ def render_playing():
     if st.session_state.feedback:
         st.warning(st.session_state.feedback)
 
-    with st.form("guess_form", clear_on_submit=True):
-        guess = st.selectbox(
-            "Name the figure:",
-            options=[None] + st.session_state.all_answers,
-            index=0,
-            format_func=lambda x: "— begin typing to search —" if x is None else x,
-        )
-        col_submit, col_reveal = st.columns([2, 1])
-        with col_submit:
-            submitted = st.form_submit_button(
-                "Submit Answer", use_container_width=True, type="primary"
-            )
-        with col_reveal:
-            at_last_clue = shown >= len(clues)
-            reveal = st.form_submit_button(
-                "Concede Defeat" if at_last_clue else "Reveal Next Clue",
-                use_container_width=True,
-            )
+    # Answer buttons — wrong guesses are removed so only live options remain
+    at_last_clue    = shown >= len(clues)
+    wrong_set       = set(st.session_state.wrong_guesses)
+    remaining_opts  = [o for o in st.session_state.current_options if o not in wrong_set]
+    labels          = ["A", "B", "C", "D", "E", "F"]
 
-    if submitted and guess is not None:
-        if check_answer(guess, q["answer"]):
+    st.markdown("**Choose the correct figure:**")
+    clicked = None
+    col_a, col_b = st.columns(2)
+    for i, opt in enumerate(remaining_opts):
+        col = col_a if i % 2 == 0 else col_b
+        with col:
+            if st.button(
+                f"{labels[i]}.  {opt}",
+                key=f"opt_{i}_{shown}",
+                use_container_width=True,
+            ):
+                clicked = opt
+
+    st.markdown(" ")
+    reveal = st.button(
+        "⚑  Concede Defeat" if at_last_clue else "📜  Reveal Next Clue",
+        use_container_width=False,
+    )
+
+    if clicked:
+        if check_answer(clicked, q["answer"]):
             points = points_table.get(shown, points_table[max(points_table)])
-            st.session_state.total_score          += points
-            st.session_state.questions_played     += 1
-            st.session_state.last_points           = points
-            st.session_state.feedback              = None
-            st.session_state.used_answers          = st.session_state.used_answers + [q["answer"]]
-            st.session_state.screen                = "question_result"
-            st.session_state.question_result_correct = True
+            st.session_state.total_score             += points
+            st.session_state.questions_played        += 1
+            st.session_state.last_points              = points
+            st.session_state.feedback                 = None
+            st.session_state.used_answers             = st.session_state.used_answers + [q["answer"]]
+            st.session_state.screen                   = "question_result"
+            st.session_state.question_result_correct  = True
             st.rerun()
         else:
-            st.session_state.wrong_guesses = st.session_state.wrong_guesses + [guess]
-            if shown >= len(clues):
-                st.session_state.questions_played     += 1
-                st.session_state.last_points           = 0
-                st.session_state.feedback              = None
-                st.session_state.used_answers          = st.session_state.used_answers + [q["answer"]]
-                st.session_state.screen                = "question_result"
-                st.session_state.question_result_correct = False
+            st.session_state.wrong_guesses = st.session_state.wrong_guesses + [clicked]
+            # Only one option left after this wrong guess — auto-fail
+            if len(remaining_opts) <= 2 or at_last_clue:
+                st.session_state.questions_played        += 1
+                st.session_state.last_points              = 0
+                st.session_state.feedback                 = None
+                st.session_state.used_answers             = st.session_state.used_answers + [q["answer"]]
+                st.session_state.screen                   = "question_result"
+                st.session_state.question_result_correct  = False
             else:
-                st.session_state.clues_shown += 1
-                st.session_state.feedback    = f"'{guess}' is not the answer — try again."
+                st.session_state.clues_shown += 2   # wrong guess skips 2 clue tiers (vs 1 for reveal)
+                st.session_state.feedback    = f"❌  '{clicked}' is incorrect — two clues forfeited."
             st.rerun()
 
     if reveal:
@@ -722,11 +737,11 @@ def render_playing():
             st.session_state.clues_shown += 1
             st.rerun()
         else:
-            st.session_state.questions_played     += 1
-            st.session_state.last_points           = 0
-            st.session_state.used_answers          = st.session_state.used_answers + [q["answer"]]
-            st.session_state.screen                = "question_result"
-            st.session_state.question_result_correct = False
+            st.session_state.questions_played        += 1
+            st.session_state.last_points              = 0
+            st.session_state.used_answers             = st.session_state.used_answers + [q["answer"]]
+            st.session_state.screen                   = "question_result"
+            st.session_state.question_result_correct  = False
             st.rerun()
 
 
