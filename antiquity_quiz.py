@@ -701,7 +701,6 @@ def render_playing():
             st.session_state.last_points           = points
             st.session_state.feedback              = None
             st.session_state.used_answers          = st.session_state.used_answers + [q["answer"]]
-            st.session_state.difficulties_used     = st.session_state.difficulties_used + [diff]
             st.session_state.screen                = "question_result"
             st.session_state.question_result_correct = True
             st.rerun()
@@ -712,7 +711,6 @@ def render_playing():
                 st.session_state.last_points           = 0
                 st.session_state.feedback              = None
                 st.session_state.used_answers          = st.session_state.used_answers + [q["answer"]]
-                st.session_state.difficulties_used     = st.session_state.difficulties_used + [diff]
                 st.session_state.screen                = "question_result"
                 st.session_state.question_result_correct = False
             else:
@@ -728,7 +726,6 @@ def render_playing():
             st.session_state.questions_played     += 1
             st.session_state.last_points           = 0
             st.session_state.used_answers          = st.session_state.used_answers + [q["answer"]]
-            st.session_state.difficulties_used     = st.session_state.difficulties_used + [diff]
             st.session_state.screen                = "question_result"
             st.session_state.question_result_correct = False
             st.rerun()

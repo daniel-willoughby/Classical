@@ -74,24 +74,32 @@ Clue 4: Created Palastine.
 Clue 5: Built a very famous wall.
 Answer: Hadrian
 
+Medium #5
+Clue 1: Reigned briefly in 69 AD.
+Clue 2: "A small grave for a small man".
+Clue 3: One of several claimants in the Year of the Four Emperors.
+Clue 4: Lost power to Vespasian.
+Clue 5: So fat he clogged the Tiber with his corpse.
+Answer: Vitellius
+
 
 Hard
 
 Hard #1
-Clue 1: A Greek taken to Italy as a political hostage.
-Clue 2: Had close connections with a powerful Roman family.
-Clue 3: Emphasised cause and effect in historical writing.
-Clue 4: Analysed Rome’s rapid rise to dominance.
-Clue 5: Historian of the Punic Wars.
-Answer: Polybius
+Clue 1: Originated from a small city in Bithynia.
+Clue 2: Became associated with a powerful Roman ruler during travels.
+Clue 3: Died under mysterious circumstances in a major river.
+Clue 4: Was later worshipped across the empire.
+Clue 5: His death deeply affected an emperor.
+Answer: Antinous
 
 Hard #2
-Clue 1: An Athenian general who failed in a key campaign.
-Clue 2: Subsequently exiled from his city.
-Clue 3: Used exile to gather information from both sides.
-Clue 4: Wrote a detailed account of a major Greek war.
-Clue 5: Historian of the Peloponnesian War.
-Answer: Thucydides
+Clue 1: Associated with a cave on an island near Athens.
+Clue 2: Known for portraying gods in unconventional ways.
+Clue 3: Often criticised during his lifetime by comic playwrights.
+Clue 4: Won fewer competitions than some rivals.
+Clue 5: One of the three great tragedians of Athens.
+Answer: Euripides
 
 Hard #3
 Clue 1: Raised and trained within the Roman system.
@@ -101,3 +109,10 @@ Clue 4: Used terrain to his advantage.
 Clue 5: Destroyed Roman legions in Teutoburg Forest.
 Answer: Arminius
 
+Hard #4
+Clue 1: Fought against Queen Zenobia in the east.
+Clue 2: Defeated King Tetricus in the west.
+Clue 3: Reigned during the crisis of 3rd century.
+Clue 4: Wore a Golden Mask.
+Clue 5: Known for restoring unity to Rome, Restitutor Orbis.
+Answer: Aurelian
