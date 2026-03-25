@@ -408,23 +408,27 @@ def check_answer(guess, answer):
 
 # ── State ─────────────────────────────────────────────────────────────────────
 
+DIFFICULTIES = ["Easy", "Medium", "Hard"]
+
+
 def init_state():
     defaults = {
-        "screen":               "name_entry",
-        "player_name":          "",
-        "all_questions":        None,
-        "all_answers":          None,
-        "difficulty":           None,
-        "current":              None,
-        "clues_shown":          1,
-        "total_score":          0,
-        "questions_played":     0,
-        "last_points":          0,
-        "wrong_guesses":        [],
-        "feedback":             None,
-        "leaderboard_saved":    False,
-        "used_answers":         [],
-        "difficulties_used":    [],
+        "screen":                  "name_entry",
+        "player_name":             "",
+        "all_questions":           None,
+        "all_answers":             None,
+        "difficulty":              "Easy",   # current question difficulty
+        "current":                 None,
+        "clues_shown":             1,
+        "total_score":             0,
+        "questions_played":        0,
+        "last_points":             0,
+        "wrong_guesses":           [],
+        "feedback":                None,
+        "leaderboard_saved":       False,
+        "used_answers":            [],       # answers used this game (no intra-game repeats)
+        "session_seen_answers":    [],       # answers seen this session (no cross-game repeats)
+        "max_difficulty_reached":  "Easy",   # highest difficulty reached this game
         "question_result_correct": False,
     }
     for k, v in defaults.items():
@@ -441,66 +445,87 @@ def init_state():
 
 
 def pick_question(difficulty):
-    pool      = st.session_state.all_questions[difficulty]
-    used      = set(st.session_state.used_answers)
-    available = [q for q in pool if q["answer"] not in used] or pool
+    """Pick a random question, avoiding repeats within the game and across the session."""
+    pool       = st.session_state.all_questions[difficulty]
+    game_used  = set(st.session_state.used_answers)
+    sess_seen  = set(st.session_state.session_seen_answers)
+
+    # Prefer questions unseen this session and unused this game
+    available = [q for q in pool if q["answer"] not in sess_seen and q["answer"] not in game_used]
+    if not available:
+        # Fallback: at least unused this game
+        available = [q for q in pool if q["answer"] not in game_used]
+    if not available:
+        # All used this game — just avoid session repeats
+        available = [q for q in pool if q["answer"] not in sess_seen]
+    if not available:
+        # Everything seen — pick from full pool (rare edge case)
+        available = pool
+
+    q = random.choice(available)
+
+    # Track in session-seen (persists across games)
+    st.session_state.session_seen_answers = st.session_state.session_seen_answers + [q["answer"]]
+
     st.session_state.difficulty    = difficulty
-    st.session_state.current       = random.choice(available)
+    st.session_state.current       = q
     st.session_state.clues_shown   = 1
     st.session_state.wrong_guesses = []
     st.session_state.feedback      = None
 
 
-def start_game(difficulty):
-    st.session_state.total_score       = 0
-    st.session_state.questions_played  = 0
-    st.session_state.leaderboard_saved = False
-    st.session_state.used_answers      = []
-    st.session_state.difficulties_used = []
-    pick_question(difficulty)
+def next_difficulty(correct: bool) -> str:
+    """Return the next difficulty one step up (correct) or down (wrong), capped Easy–Hard."""
+    idx = DIFFICULTIES.index(st.session_state.difficulty)
+    return DIFFICULTIES[min(idx + 1, 2) if correct else max(idx - 1, 0)]
+
+
+def start_game():
+    """Always start a new game at Easy; difficulty adapts from there."""
+    st.session_state.total_score            = 0
+    st.session_state.questions_played       = 0
+    st.session_state.leaderboard_saved      = False
+    st.session_state.used_answers           = []
+    st.session_state.max_difficulty_reached = "Easy"
+    pick_question("Easy")
     st.session_state.screen = "playing"
 
 
 def after_question():
+    """Called when the player clicks through from the result screen."""
+    correct  = st.session_state.get("question_result_correct", False)
+    new_diff = next_difficulty(correct)
+
+    # Track highest difficulty reached
+    cur_idx = DIFFICULTIES.index(st.session_state.max_difficulty_reached)
+    new_idx = DIFFICULTIES.index(new_diff)
+    if new_idx > cur_idx:
+        st.session_state.max_difficulty_reached = new_diff
+
     if st.session_state.questions_played >= QUESTIONS_PER_GAME:
         if not st.session_state.leaderboard_saved:
             add_to_leaderboard(
                 st.session_state.player_name,
                 st.session_state.total_score,
-                st.session_state.difficulties_used,
+                [st.session_state.max_difficulty_reached],   # label = highest reached
             )
             st.session_state.leaderboard_saved = True
         st.session_state.screen = "final_score"
     else:
-        st.session_state.screen = "difficulty_pick"
+        pick_question(new_diff)
+        st.session_state.screen = "playing"
 
 
 # ── Shared UI helpers ─────────────────────────────────────────────────────────
 
-def diff_buttons(key_prefix):
-    """Three difficulty buttons; returns chosen difficulty string or None."""
-    col1, col2, col3 = st.columns(3)
-    chosen = None
-    for col, diff in zip([col1, col2, col3], ["Easy", "Medium", "Hard"]):
-        desc, pts = DIFF_INFO[diff]
-        with col:
-            st.markdown(
-                f'<p style="text-align:center;font-family:\'Cinzel\',serif;'
-                f'color:#d4af37;font-size:1rem;letter-spacing:0.08em;'
-                f'margin-bottom:0.1rem;">{diff}</p>'
-                f'<p style="text-align:center;color:#9e8a5e;font-style:italic;'
-                f'font-size:0.82rem;margin-top:0;">{desc}<br>{pts}/question</p>',
-                unsafe_allow_html=True,
-            )
-            is_current = diff == st.session_state.difficulty
-            if st.button(
-                f"Choose {diff}",
-                key=f"{key_prefix}_{diff}",
-                use_container_width=True,
-                type="primary" if is_current else "secondary",
-            ):
-                chosen = diff
-    return chosen
+def diff_badge(diff: str) -> str:
+    """Return a small HTML badge for a difficulty level."""
+    color = {"Easy": "#4caf80", "Medium": "#d4a030", "Hard": "#c05050"}.get(diff, "#d4af37")
+    return (
+        f'<span style="font-family:\'Cinzel\',serif;font-size:0.78rem;'
+        f'letter-spacing:0.10em;color:{color};border:1px solid {color}55;'
+        f'padding:0.15rem 0.55rem;border-radius:2px;">{diff.upper()}</span>'
+    )
 
 
 def leaderboard_table(entries, highlight_name=None, highlight_score=None,
@@ -562,7 +587,7 @@ def render_main_menu():
     col_start, col_board = st.columns(2)
     with col_start:
         if st.button("⚔  Start Game", type="primary", use_container_width=True):
-            st.session_state.screen = "select"
+            start_game()
             st.rerun()
     with col_board:
         if st.button("🏆  Leaderboard", use_container_width=True):
@@ -571,8 +596,8 @@ def render_main_menu():
 
     st.markdown("---")
     st.caption(
-        f"Each game is {QUESTIONS_PER_GAME} questions. "
-        "Choose a difficulty before every question — mix and match as you see fit."
+        f"Each game is {QUESTIONS_PER_GAME} questions — you start at Easy. "
+        "Answer correctly to face harder questions and earn greater glory."
     )
 
     entries = load_leaderboard()
@@ -595,46 +620,6 @@ def render_leaderboard():
         st.rerun()
 
 
-def render_select():
-    """Difficulty picker for the first question of a new game."""
-    set_bg("menu")
-    st.title("🏛️ What a Classic")
-    ornament_divider()
-    screen_subtitle(f"Welcome, {st.session_state.player_name} — choose your first trial")
-    st.markdown("---")
-    st.markdown("### Question I of III — Choose a Difficulty")
-    st.markdown(" ")
-
-    chosen = diff_buttons("start")
-    if chosen:
-        start_game(chosen)
-        st.rerun()
-
-    st.markdown("---")
-    if st.button("← Back to Menu", use_container_width=False):
-        st.session_state.screen = "main_menu"
-        st.rerun()
-
-
-def render_difficulty_pick():
-    """Difficulty picker shown between questions."""
-    set_bg("menu")
-    qnum    = st.session_state.questions_played + 1
-    numeral = ["I", "II", "III"][qnum - 1] if qnum <= 3 else str(qnum)
-
-    st.title("🏛️ Choose Your Trial")
-    ornament_divider()
-    screen_subtitle(f"Running score: {st.session_state.total_score} pts")
-    st.markdown("---")
-    st.markdown(f"### Question {numeral} of III — Choose a Difficulty")
-    st.caption("Dare you test yourself on harder ground for greater glory?")
-    st.markdown(" ")
-
-    chosen = diff_buttons("pick")
-    if chosen:
-        pick_question(chosen)
-        st.session_state.screen = "playing"
-        st.rerun()
 
 
 def render_playing():
@@ -653,8 +638,8 @@ def render_playing():
     col_left, col_right = st.columns([3, 1])
     with col_left:
         st.markdown(
-            f"<h3 style='margin-bottom:0.1rem;'>:{color}[{diff}] &nbsp;·&nbsp; "
-            f"Question {numeral} of III</h3>",
+            f"<h3 style='margin-bottom:0.25rem;'>Question {numeral} of III &nbsp;"
+            f"{diff_badge(diff)}</h3>",
             unsafe_allow_html=True,
         )
         st.caption(f"Player: {st.session_state.player_name}")
@@ -783,10 +768,19 @@ def render_question_result():
             after_question()
             st.rerun()
     else:
+        correct  = st.session_state.get("question_result_correct", False)
+        nxt      = next_difficulty(correct)
+        arrow    = "↑" if correct and nxt != st.session_state.difficulty else (
+                   "↓" if not correct and nxt != st.session_state.difficulty else "→")
+        st.markdown(
+            f'<p style="text-align:center;color:#9e8a5e;font-style:italic;'
+            f'font-size:0.9rem;">Next question: {diff_badge(nxt)} &nbsp;{arrow}</p>',
+            unsafe_allow_html=True,
+        )
         qnum  = st.session_state.questions_played + 1
         numer = ["I", "II", "III"][qnum - 1] if qnum <= 3 else str(qnum)
         if st.button(
-            f"Choose Difficulty for Question {numer} →",
+            f"Question {numer} →",
             type="primary", use_container_width=True,
         ):
             after_question()
@@ -795,13 +789,12 @@ def render_question_result():
 
 def render_final_score():
     set_bg("result")
-    score      = st.session_state.total_score
-    diffs      = st.session_state.difficulties_used
-    diff_label = diffs[0] if len(set(diffs)) == 1 else "Mixed"
+    score     = st.session_state.total_score
+    max_diff  = st.session_state.max_difficulty_reached
 
     st.title("🏛️ The Reckoning")
     ornament_divider()
-    screen_subtitle(f"{st.session_state.player_name} · {diff_label}")
+    screen_subtitle(f"{st.session_state.player_name} · peaked at {max_diff}")
     st.markdown(
         f'<h2 style="text-align:center;">Final Score: '
         f'<span style="color:#d4af37;">{score}</span></h2>',
@@ -814,7 +807,7 @@ def render_final_score():
         load_leaderboard(),
         highlight_name=st.session_state.player_name,
         highlight_score=score,
-        highlight_diff=diff_label,
+        highlight_diff=max_diff,
     )
 
     st.markdown("---")
@@ -825,7 +818,7 @@ def render_final_score():
             st.rerun()
     with col_play:
         if st.button("⚔  Play Again", type="primary", use_container_width=True):
-            st.session_state.screen = "select"
+            start_game()
             st.rerun()
 
 
@@ -845,8 +838,6 @@ def main():
         "name_entry":      render_name_entry,
         "main_menu":       render_main_menu,
         "leaderboard":     render_leaderboard,
-        "select":          render_select,
-        "difficulty_pick": render_difficulty_pick,
         "playing":         render_playing,
         "question_result": render_question_result,
         "final_score":     render_final_score,
