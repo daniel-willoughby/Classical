@@ -17,7 +17,7 @@ def _img_b64(filename: str) -> str:
 
 QUIZ_FILE       = os.path.join(os.path.dirname(os.path.abspath(__file__)), "antiquity_quiz_102.txt")
 LEADERBOARD_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "leaderboard.json")
-QUESTIONS_PER_GAME = 3
+QUESTIONS_PER_GAME = 5
 
 POINTS_BY_ATTEMPT = {
     "Easy":   {1: 500,  2: 400,  3: 300,  4: 200,  5: 100},
